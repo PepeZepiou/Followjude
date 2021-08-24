@@ -1,6 +1,10 @@
-import requests
-from bs4 import BeautifulSoup
+#!/usr/bin/python3
 
+import requests
+from requests import ConnectionError
+from bs4 import BeautifulSoup
+import sys
+from datetime import datetime
 
 logJ_path = './logJ.txt'
 log_path = './log.txt'
@@ -21,10 +25,15 @@ headers = {
     'Cache-Control': 'max-age=0',
 }
 url = 'https://www.vesselfinder.com/fr/vessels/JUDE-IMO-0-MMSI-329011750'
+# Setup string for output (which will be logged in crontab.log)
+output_date = '{:%d-%m-%Y %H:%M :  scrapper   : }'.format(datetime.now())
 
 
-# Get html page
-page = requests.get(url, headers=headers)
+# Try to get html page
+try:
+    page = requests.get(url, headers=headers)
+except ConnectionError:
+    sys.exit(output_date + "ConnectionError")
 # Parse html page
 soup = BeautifulSoup(page.content, 'html.parser')
 # 1st: find last position date/hour
@@ -45,3 +54,5 @@ with open(logJ_path, 'a') as file:
     file.write(data)
 with open(log_path, 'a') as file:
     file.write(data)
+# Exit with return "Done" for crontab.log
+sys.exit(output_date + "Done")

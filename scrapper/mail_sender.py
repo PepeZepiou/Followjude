@@ -1,19 +1,25 @@
+#!/usr/bin/python3
+
 import smtplib
 from email.message import EmailMessage
 import math
-
+import socket
+import sys
+from datetime import datetime
 
 # Declare all variables
-username = "your_mail_address"
+username = "your_username"
 password = "your_password"
-# path = "/home/pi/Documents/logJ.txt"
-path = "./logJ.txt"
+path = "/home/pi/Documents/logJ.txt"
+# path = "./logJ.txt"
 text = ""
 body = ""
 lat = []
 lon = []
 data2 = []
 lines = []
+# Setup string for output (which will be logged in crontab.log)
+output_date = '{:%d-%m-%Y %H:%M : mail_sender : }'.format(datetime.now())
 
 # Read raw data from daily_log
 with open(path, 'r') as file:
@@ -64,10 +70,15 @@ msg['To'] = username
 msg['Subject'] = 'Data'
 msg.set_content(body)
 
-# Connect and log to mail server
-server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+# Try to connect and log to mail server
+try:
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+except socket.gaierror:
+    sys.exit(output_date + "ConnectionError")
 server.login(username, password)
 # Send email
 server.send_message(msg)
 # Disconnect to mail server
 server.quit()
+# Exit with return "Done" for crontab.log
+sys.exit(output_date + "Done")
